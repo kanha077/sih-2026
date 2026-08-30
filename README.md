@@ -204,6 +204,117 @@ python validation/metrics.py --predicted outputs/sample_dsm.tif --reference data
 
 ---
 
+## 🎯 Calibration Module (Critical Component)
+
+Raw monocular depth models (Depth Anything V2 / MiDaS / ZoeDepth) output **relative depth**, not real-world height in meters. The Calibration Module converts this relative depth into **metric elevation**, and it is a **mandatory, core part of the pipeline** — without it the DSM output is not usable for any geospatial application.
+
+### Why it's needed
+| Without Calibration | With Calibration |
+|---|---|
+| Only relative height pattern (higher/lower) | Actual elevation in meters (e.g. 245m, 312m) |
+| Cannot be compared to real-world data | Can be validated against SRTM/GCPs |
+| Not usable in GIS tools | Standard GeoTIFF, GIS-compatible |
+
+### Calibration Strategies
+
+**1. SRTM DEM–based Calibration (primary method)**
+- Fetch the corresponding SRTM DEM tile for the input image's geographic extent
+- Sample a set of reference points from the SRTM tile
+- Fit a **scale + offset regression** (linear or robust regression) between the model's relative depth values and SRTM elevation at the same points
+- Apply the fitted transform to the entire relative depth map to produce metric elevation
+
+**2. Ground Control Point (GCP)–based Calibration (alternate/refinement method)**
+- Use a small set of manually surveyed or known-elevation points within the scene
+- Solve for scale and offset (or a higher-order correction) using least-squares fitting
+- Useful when SRTM resolution is too coarse for the input image, or for local refinement
+
+**3. Hybrid Approach (recommended for best accuracy)**
+- Use SRTM for coarse, global calibration across the full scene
+- Refine locally with any available GCPs for higher precision in critical regions
+
+### Calibration Pipeline
+
+```
+Relative Depth Map (model output)
+        │
+        ▼
+Sample points at known SRTM/GCP locations
+        │
+        ▼
+Fit scale (a) and offset (b):  elevation = a * relative_depth + b
+        │
+        ▼
+Apply transform to full depth map
+        │
+        ▼
+Metric Elevation Map (meters) → DSM
+```
+
+### Implementation (`src/calibration.py`)
+
+```python
+import numpy as np
+from sklearn.linear_model import RANSACRegressor
+import rasterio
+
+def calibrate_depth_to_elevation(relative_depth, reference_dem, sample_mask=None):
+    """
+    Calibrates a relative depth map to metric elevation using
+    a reference DEM (e.g. SRTM) or GCPs.
+
+    Args:
+        relative_depth (np.ndarray): raw model output, relative depth values
+        reference_dem (np.ndarray): co-registered SRTM/GCP elevation values (meters)
+        sample_mask (np.ndarray, optional): boolean mask of valid/reliable
+            reference points to fit on (e.g. flat, cloud-free areas)
+
+    Returns:
+        elevation_map (np.ndarray): calibrated metric elevation (meters)
+        scale (float), offset (float): fitted transform parameters
+    """
+    if sample_mask is not None:
+        x = relative_depth[sample_mask].reshape(-1, 1)
+        y = reference_dem[sample_mask]
+    else:
+        x = relative_depth.flatten().reshape(-1, 1)
+        y = reference_dem.flatten()
+
+    # RANSAC used to stay robust to outliers/noisy reference points
+    regressor = RANSACRegressor()
+    regressor.fit(x, y)
+
+    scale = regressor.estimator_.coef_[0]
+    offset = regressor.estimator_.intercept_
+
+    elevation_map = relative_depth * scale + offset
+    return elevation_map, scale, offset
+
+
+def export_calibrated_dsm(elevation_map, reference_profile, output_path):
+    """
+    Writes the calibrated elevation map to a GeoTIFF using the
+    georeferencing profile from the reference DEM.
+    """
+    profile = reference_profile.copy()
+    profile.update(dtype=rasterio.float32, count=1)
+
+    with rasterio.open(output_path, "w", **profile) as dst:
+        dst.write(elevation_map.astype(np.float32), 1)
+```
+
+### Calibration Accuracy Check
+After calibration, always validate against held-out reference points (not used in fitting) to report honest accuracy:
+
+```bash
+python validation/metrics.py \
+    --predicted outputs/sample_dsm_calibrated.tif \
+    --reference data/srtm_dem/reference.tif
+```
+
+> ⚠️ **Note for demo/judging:** Always present both calibrated (metric, meters) and uncalibrated (relative depth) outputs side-by-side to clearly show the value the calibration module adds.
+
+---
+
 ## 📊 Validation & Metrics
 
 Model accuracy is validated by comparing predicted DSM values against reference SRTM/ground-truth elevation using:

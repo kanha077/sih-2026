@@ -1,0 +1,12 @@
+torch
+torchvision
+transformers
+gdal
+rasterio
+open3d
+trimesh
+numpy
+opencv-python
+fastapi
+uvicorn
+scikit-learn
