@@ -1,0 +1,94 @@
+# ==============================================================================
+# DepthWizard .gitignore
+# ==============================================================================
+
+# --- Python & Backend ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environments
+venv/
+.venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Testing & Coverage
+.pytest_cache/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+
+# Backend Uploads & Outputs (Keep folder structure if needed)
+backend/uploads/*
+!backend/uploads/.gitkeep
+backend/outputs/*
+!backend/outputs/.gitkeep
+
+# Model Weights (Large binary checkpoints)
+backend/weights/*.pt
+backend/weights/*.pth
+backend/weights/*.onnx
+backend/weights/*.bin
+!backend/weights/.gitkeep
+
+# --- Node.js & Frontend ---
+frontend/node_modules/
+node_modules/
+frontend/dist/
+frontend/dist-ssr/
+*.local
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+*.log
+
+# Editor & OS artifacts
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+*.sublime-workspace
+*.sublime-project
+
+# Environment Variables & Secrets
+.env
+.env.*
+!.env.example
