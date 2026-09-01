@@ -1,0 +1,30 @@
+RESPONSIBILITIES
+We attach great importance to the quality and accuracy of the data we share. However, topoexport.com cannot be held responsible for any anomalies, inconsistencies, or inaccuracies found in the exported files. It is necessary for users to conduct rigorous data checks with surveyors before using them to avoid any errors, approximations, or inconsistencies.
+_____________________________
+
+LICENSES AND COPYRIGHTS
+
+The following licenses and copyrights apply to the various elements on our website:
+Front-end:
+    Interactive Map: Leaflet and OpenStreetMap contributions.
+
+Vectorial Sources
+  Buildings 3D: Overture Maps Foundation - Buildings 2026 (ODbL)
+  Parcels: NYS Geospatial Services - Statewide Parcel Map Program 2025 (CC-BY 4.0)
+  Roads: Overture Maps Foundation - Transportation 2026 (ODbL)
+  Railways: Overture Maps Foundation - Transportation 2026 (ODbL)
+  Waterways: Overture Maps Foundation - Base 2026 (ODbL)
+  Topoexport Composite Trees :
+    Trees: Overture Maps Foundation - Base 2026 (ODbL)
+    Digital Surface Model: Meta and World Resources Institute - Global Canopy Height Maps v2 2026 (CC BY 4.0)
+  Digital Terrain Model (1 m): United States Geological Survey - 3D Elevation Program 2026 (US Government Public Domain)
+  Green Areas: Overture Maps Foundation - Base 2026 (ODbL)
+
+Modeling Sources
+  Buildings 3D: Overture Maps Foundation - Buildings 2026 (ODbL)
+  Roads: Overture Maps Foundation - Transportation 2026 (ODbL)
+  Topoexport Composite Trees :
+    Trees: Overture Maps Foundation - Base 2026 (ODbL)
+    Digital Surface Model: Meta and World Resources Institute - Global Canopy Height Maps v2 2026 (CC BY 4.0)
+  Digital Terrain Model (1 m): United States Geological Survey - 3D Elevation Program 2026 (US Government Public Domain)
+  Green Areas: Overture Maps Foundation - Base 2026 (ODbL)
