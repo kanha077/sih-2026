@@ -1,0 +1,143 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root, html.dark {
+    --topo-canvas: #0F1318;
+    --topo-panel: #161C23;
+    --topo-surface: #1C232C;
+    --topo-border: #293440;
+    --topo-border-focus: #4A5B6E;
+    --topo-ochre: #E5A93C;
+    --topo-terra: #C86D51;
+    --topo-pine: #2D5A43;
+    --topo-sand: #D4B483;
+    --topo-ink: #F1F5F9;
+    --topo-ink-muted: #8E9BAE;
+    --topo-ink-dim: #526071;
+    --reticle-color: #E5A93C;
+  }
+
+  html.light {
+    --topo-canvas: #F5F2EB;
+    --topo-panel: #EAE4D6;
+    --topo-surface: #DFD7C5;
+    --topo-border: #C8BDA7;
+    --topo-border-focus: #8C7C62;
+    --topo-ochre: #B8720A;
+    --topo-terra: #A94E34;
+    --topo-pine: #1E4631;
+    --topo-sand: #8B6B38;
+    --topo-ink: #141A20;
+    --topo-ink-muted: #4B5663;
+    --topo-ink-dim: #7C8996;
+    --reticle-color: #B8720A;
+  }
+
+  body {
+    background-color: var(--topo-canvas);
+    color: var(--topo-ink);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    letter-spacing: -0.01em;
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+
+  /* Technical Mono Numbers */
+  .font-mono {
+    font-family: 'Space Mono', 'JetBrains Mono', monospace;
+    font-feature-settings: "tnum" on, "zero" on;
+  }
+
+  /* Precision Scrollbar */
+  ::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--topo-canvas);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--topo-border);
+    border-radius: 2px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--topo-border-focus);
+  }
+}
+
+/* Precision Instrument Borders & Reticles */
+.instrument-panel {
+  background-color: var(--topo-panel);
+  border: 1px solid var(--topo-border);
+  position: relative;
+}
+
+.instrument-panel-subtle {
+  background-color: var(--topo-surface);
+  border: 1px solid var(--topo-border);
+}
+
+/* Topographic Reticle Corner Crosshairs */
+.reticle-box {
+  position: relative;
+}
+
+.reticle-box::before,
+.reticle-box::after {
+  content: '';
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.reticle-box::before {
+  top: 6px;
+  left: 6px;
+  border-top: 1.5px solid var(--reticle-color);
+  border-left: 1.5px solid var(--reticle-color);
+}
+
+.reticle-box::after {
+  bottom: 6px;
+  right: 6px;
+  border-bottom: 1.5px solid var(--reticle-color);
+  border-right: 1.5px solid var(--reticle-color);
+}
+
+/* Topographic Survey Grid Pattern */
+.survey-grid-bg {
+  background-size: 32px 32px;
+  background-image: 
+    linear-gradient(to right, var(--topo-border) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--topo-border) 1px, transparent 1px);
+}
+
+/* Three.js Canvas Container */
+.three-canvas-container canvas {
+  outline: none;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Custom Range Input */
+input[type=range].survey-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  background: var(--topo-border);
+  height: 4px;
+  border-radius: 2px;
+}
+
+input[type=range].survey-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 2px;
+  background: var(--topo-ochre);
+  border: 1px solid var(--topo-canvas);
+  cursor: pointer;
+}
