@@ -19,6 +19,13 @@ export interface ElevationStats {
   crs: string;
   bounds: SpatialBounds;
   processing_time_ms: number;
+  elevation_mode?: 'calibrated' | 'preview';
+  calibrated?: boolean;
+  unit?: string;
+  alpha?: number | null;
+  beta?: number | null;
+  rmse_meters?: number | null;
+  is_verified_location?: boolean;
 }
 
 export interface JobResult {
@@ -30,6 +37,11 @@ export interface JobResult {
   mesh_obj_url: string;
   stats: ElevationStats;
   available_colormaps: string[];
+  elevation_mode?: 'calibrated' | 'preview';
+  rmse_meters?: number | null;
+  alpha?: number | null;
+  beta?: number | null;
+  is_verified_location?: boolean;
 }
 
 export interface JobStatus {
@@ -50,6 +62,7 @@ export interface SampleItem {
   filename: string;
   default_lat: number;
   default_lon: number;
+  is_verified_location?: boolean;
 }
 
 export interface AdvancedGeoSettings {

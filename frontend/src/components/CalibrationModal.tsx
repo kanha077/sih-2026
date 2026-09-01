@@ -42,12 +42,12 @@ export const CalibrationModal: React.FC<CalibrationModalProps> = ({ isOpen, onCl
         {/* 2-State Comparison Layout */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
           
-          {/* State 1: Preview Mode (Current) */}
+          {/* State 1: Preview Mode */}
           <div className="p-5 rounded-sm bg-topo-canvas border border-topo-ochre/60 flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between gap-2 mb-3">
                 <span className="px-2 py-0.5 rounded-sm bg-topo-ochre/15 text-topo-ochre border border-topo-ochre/30 text-xs font-mono font-bold">
-                  PREVIEW MODE [CURRENT]
+                  PREVIEW MODE [FALLBACK]
                 </span>
                 <Cpu className="w-4 h-4 text-topo-ochre" />
               </div>
@@ -57,7 +57,7 @@ export const CalibrationModal: React.FC<CalibrationModalProps> = ({ isOpen, onCl
               </h3>
 
               <p className="text-sm font-sans text-topo-inkMuted leading-relaxed">
-                DepthWizard runs the MiDaS deep neural network to estimate relative surface depth directly from visual cues (perspective, texture gradients, and occlusion). The output is normalized to an illustrative 0 to 100 relative elevation scale.
+                DepthWizard runs the MiDaS deep neural network to estimate relative surface depth directly from visual cues (perspective, texture gradients, and occlusion). When SRTM elevation data is unavailable or offline, the output is normalized to an illustrative 0 to 100 relative elevation scale.
               </p>
             </div>
 
@@ -77,14 +77,14 @@ export const CalibrationModal: React.FC<CalibrationModalProps> = ({ isOpen, onCl
             </div>
           </div>
 
-          {/* State 2: Calibrated Mode (Roadmap) */}
-          <div className="p-5 rounded-sm bg-topo-canvas border border-topo-border flex flex-col justify-between">
+          {/* State 2: Calibrated Mode */}
+          <div className="p-5 rounded-sm bg-topo-canvas border border-emerald-500/60 flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between gap-2 mb-3">
-                <span className="px-2 py-0.5 rounded-sm bg-topo-terra/15 text-topo-terra border border-topo-terra/30 text-xs font-mono font-bold">
-                  CALIBRATED MODE [FUTURE]
+                <span className="px-2 py-0.5 rounded-sm bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 text-xs font-mono font-bold">
+                  CALIBRATED MODE [ACTIVE]
                 </span>
-                <Satellite className="w-4 h-4 text-topo-terra" />
+                <Satellite className="w-4 h-4 text-emerald-400" />
               </div>
 
               <h3 className="text-base font-bold font-display text-topo-ink mb-2">
@@ -92,21 +92,21 @@ export const CalibrationModal: React.FC<CalibrationModalProps> = ({ isOpen, onCl
               </h3>
 
               <p className="text-sm font-sans text-topo-inkMuted leading-relaxed">
-                A calibrated model converts relative parallax into true metric heights. By pairing photo GPS EXIF metadata (camera pitch, yaw, altitude) with open reference DEMs (Copernicus 30m or NASA SRTM), the model scales into real-world meters.
+                The SRTM Calibration module queries a 24&times;24 reference DEM grid (NASA SRTM 30m / Copernicus GLO-30) spanning the raster bounding box, fits linear least-squares regression (<code className="text-emerald-400">z = &alpha;&middot;z_rel + &beta;</code>), and converts relative disparity into true meters above sea level.
               </p>
             </div>
 
             <div className="mt-5 pt-3 border-t border-topo-border/60 space-y-1.5 font-mono text-xs text-topo-inkMuted">
               <div className="flex items-center gap-2 text-topo-ink">
-                <span className="text-topo-terra font-bold">&bull;</span>
+                <span className="text-emerald-400 font-bold">&bull;</span>
                 <span><strong>File format:</strong> Metric DEM in geodetic meters (m)</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-topo-terra font-bold">&bull;</span>
-                <span><strong>Method:</strong> EXIF telemetry + Reference DEM fusion</span>
+                <span className="text-emerald-400 font-bold">&bull;</span>
+                <span><strong>Method:</strong> Sparse SRTM 30m grid + Least-Squares fit</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-topo-terra font-bold">&bull;</span>
+                <span className="text-emerald-400 font-bold">&bull;</span>
                 <span><strong>Use cases:</strong> Volumetric surveys &amp; GIS hydrology</span>
               </div>
             </div>

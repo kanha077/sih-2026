@@ -20,6 +20,7 @@ from app.services.dem_generator import generate_geotiff
 from app.services.colormap_service import generate_colorized_images
 from app.services.mesh_generator import generate_obj_mesh
 from app.services.cleanup_service import purge_old_artifacts
+from app.services.calibration_service import SRTMCalibrator
 
 # Setup Logging
 logging.basicConfig(
@@ -152,6 +153,7 @@ def _process_pipeline(
     origin_lat: float,
     origin_lon: float,
     pixel_scale: float,
+    is_verified_location: bool = True,
 ):
     try:
         t0 = time.time()
@@ -164,10 +166,24 @@ def _process_pipeline(
             pil_image = pil_image.convert("RGB")
 
         # 1. Depth Estimation
-        jobs_db[job_id]["progress"] = 35
+        jobs_db[job_id]["progress"] = 30
         jobs_db[job_id]["message"] = "Estimating monocular depth via MiDaS..."
         estimator = DepthEstimator()
         elevation_data = estimator.estimate_depth(pil_image)
+
+        # 1.5 SRTM Elevation Calibration
+        jobs_db[job_id]["progress"] = 50
+        jobs_db[job_id]["message"] = "Calibrating relative depth to SRTM metric elevation..."
+        calibrator = SRTMCalibrator()
+        calib_res = calibrator.calibrate(
+            elevation_data,
+            origin_lat=origin_lat,
+            origin_lon=origin_lon,
+            pixel_scale=pixel_scale,
+        )
+
+        calibrated = calib_res["calibrated"]
+        final_elevation_data = calib_res["calibrated_data"]
 
         # 2. GeoTIFF Generation
         jobs_db[job_id]["progress"] = 65
@@ -177,23 +193,28 @@ def _process_pipeline(
 
         geotiff_path = os.path.join(job_output_dir, "elevation_dem.tif")
         dem_stats = generate_geotiff(
-            elevation_data,
+            final_elevation_data,
             geotiff_path,
             origin_lat=origin_lat,
             origin_lon=origin_lon,
             pixel_scale=pixel_scale,
+            calibrated=calibrated,
+            alpha=calib_res.get("alpha"),
+            beta=calib_res.get("beta"),
+            rmse=calib_res.get("rmse"),
+            is_verified_location=is_verified_location,
         )
 
         # 3. Colormaps & Relief PNGs
         jobs_db[job_id]["progress"] = 80
         jobs_db[job_id]["message"] = "Rendering hypsometric elevation palettes..."
-        colored_files = generate_colorized_images(elevation_data, job_output_dir)
+        colored_files = generate_colorized_images(final_elevation_data, job_output_dir)
 
         # 4. 3D Wavefront OBJ Mesh
         jobs_db[job_id]["progress"] = 92
         jobs_db[job_id]["message"] = "Generating 3D terrain surface mesh..."
         mesh_path = os.path.join(job_output_dir, "terrain_mesh.obj")
-        generate_obj_mesh(elevation_data, mesh_path)
+        generate_obj_mesh(final_elevation_data, mesh_path)
 
         elapsed_ms = int((time.time() - t0) * 1000)
         dem_stats["processing_time_ms"] = elapsed_ms
@@ -218,9 +239,14 @@ def _process_pipeline(
                 "mesh_obj_url": f"/outputs/{job_id}/terrain_mesh.obj",
                 "stats": dem_stats,
                 "available_colormaps": list(colored_urls.keys()),
+                "elevation_mode": dem_stats["elevation_mode"],
+                "rmse_meters": dem_stats["rmse_meters"],
+                "alpha": dem_stats["alpha"],
+                "beta": dem_stats["beta"],
+                "is_verified_location": is_verified_location,
             },
         })
-        logger.info(f"Job {job_id} successfully completed in {elapsed_ms}ms")
+        logger.info(f"Job {job_id} successfully completed in {elapsed_ms}ms [mode={dem_stats['elevation_mode']}]")
     except Exception as e:
         logger.error(f"Job {job_id} failed: {e}", exc_info=True)
         jobs_db[job_id].update({
@@ -255,6 +281,7 @@ def get_sample_plates():
             "filename": "sample_satellite_mountain.png",
             "default_lat": 46.55,
             "default_lon": 8.56,
+            "is_verified_location": False,
         },
         {
             "id": "coastal-valley",
@@ -265,6 +292,7 @@ def get_sample_plates():
             "filename": "sample_coastal_valley.png",
             "default_lat": 36.60,
             "default_lon": -121.90,
+            "is_verified_location": False,
         },
         {
             "id": "urban-grid",
@@ -275,6 +303,7 @@ def get_sample_plates():
             "filename": "sample_urban_grid.png",
             "default_lat": 37.77,
             "default_lon": -122.42,
+            "is_verified_location": False,
         },
         {
             "id": "landscape-panorama",
@@ -285,6 +314,7 @@ def get_sample_plates():
             "filename": "sample_landscape_panorama.jpg",
             "default_lat": 47.57,
             "default_lon": -122.31,
+            "is_verified_location": False,
         },
     ]
 
@@ -347,6 +377,7 @@ async def upload_image(
         origin_lat or 37.7749,
         origin_lon or -122.4194,
         pixel_scale or 0.0001,
+        True,  # User upload
     )
 
     return {"job_id": job_id, "status": "queued"}
@@ -392,6 +423,7 @@ async def process_sample_plate(sample_id: str):
         lat,
         lon,
         0.0001,
+        False,  # Sample demo plate coordinates are non-verified
     )
 
     return {"job_id": job_id, "status": "queued"}

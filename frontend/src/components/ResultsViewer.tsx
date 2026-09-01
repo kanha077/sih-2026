@@ -53,6 +53,11 @@ export const ResultsViewer: React.FC<ResultsViewerProps> = ({
             <span className="text-topo-inkDim ml-2 hidden sm:inline">
               LATENCY: {result.stats.processing_time_ms} ms &bull; CRS: {result.stats.crs}
             </span>
+            {result.stats.elevation_mode === 'calibrated' && (
+              <span className="ml-2 px-1.5 py-0.5 rounded-sm bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold">
+                SRTM CALIBRATED (METERS) {result.stats.rmse_meters ? `• RMSE: ±${result.stats.rmse_meters}m` : ''}
+              </span>
+            )}
           </div>
         </div>
 
@@ -139,6 +144,7 @@ export const ResultsViewer: React.FC<ResultsViewerProps> = ({
                 elevationUrl={currentElevationUrl}
                 colormapLabel={colormapNames[currentColormap]}
                 theme={theme}
+                elevationStats={result.stats}
               />
             )}
 

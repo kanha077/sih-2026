@@ -69,14 +69,19 @@ export const SamplePicker: React.FC<SamplePickerProps> = ({
                 {sample.description}
               </p>
               
-              <div className="mt-2.5 pt-2 border-t border-topo-border/50 flex items-center justify-between text-[10px] font-mono text-topo-inkDim">
-                <span className="flex items-center gap-1">
-                  <MapPin className="w-3 h-3 text-topo-ochre" />
-                  {sample.default_lat.toFixed(2)}&deg;N, {sample.default_lon.toFixed(2)}&deg;E
-                </span>
-                <span className="text-topo-ochre group-hover:underline">
-                  Load &rarr;
-                </span>
+              <div className="mt-2.5 pt-2 border-t border-topo-border/50 space-y-1 text-[10px] font-mono text-topo-inkDim">
+                <div className="flex items-center justify-between">
+                  <span className="flex items-center gap-1">
+                    <MapPin className="w-3 h-3 text-topo-ochre" />
+                    {sample.default_lat.toFixed(2)}&deg;N, {sample.default_lon.toFixed(2)}&deg;E
+                  </span>
+                  <span className="text-topo-ochre group-hover:underline">
+                    Load &rarr;
+                  </span>
+                </div>
+                <div className="text-[9px] text-amber-400/90 italic truncate" title="Demo coordinates for pipeline illustration — not GPS-verified against source photo">
+                  * Demo coordinates (unverified)
+                </div>
               </div>
             </div>
           </div>
