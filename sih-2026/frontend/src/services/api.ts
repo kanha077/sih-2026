@@ -1,11 +1,26 @@
 import { JobStatus, JobResult, SampleItem, AdvancedGeoSettings } from '../types';
 
-const API_BASE = '/api';
+const BACKEND_URL = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+const API_BASE = BACKEND_URL ? `${BACKEND_URL}/api` : '/api';
+
+export function resolveBackendUrl(path: string | null | undefined): string {
+  if (!path) return '';
+  if (path.startsWith('http://') || path.startsWith('https://')) {
+    return path;
+  }
+  const cleanPath = path.startsWith('/') ? path : `/${path}`;
+  return BACKEND_URL ? `${BACKEND_URL}${cleanPath}` : cleanPath;
+}
 
 export async function fetchSamples(): Promise<SampleItem[]> {
   const res = await fetch(`${API_BASE}/samples`);
   if (!res.ok) throw new Error('Failed to fetch survey plate catalog');
-  return res.json();
+  const samples: SampleItem[] = await res.json();
+  return samples.map((item) => ({
+    ...item,
+    thumbnail_url: resolveBackendUrl(item.thumbnail_url),
+    precomputed_mesh_url: item.precomputed_mesh_url ? resolveBackendUrl(item.precomputed_mesh_url) : null,
+  }));
 }
 
 export async function uploadImage(
@@ -52,7 +67,25 @@ export async function getJobStatus(jobId: string): Promise<JobStatus> {
 export async function getJobResult(jobId: string): Promise<JobResult> {
   const res = await fetch(`${API_BASE}/result/${jobId}`);
   if (!res.ok) throw new Error('Failed to retrieve synthesized result');
-  return res.json();
+  const data: JobResult = await res.json();
+
+  const colored_png_urls: Record<string, string> = {};
+  if (data.colored_png_urls) {
+    for (const [k, v] of Object.entries(data.colored_png_urls)) {
+      colored_png_urls[k] = resolveBackendUrl(v);
+    }
+  }
+
+  return {
+    ...data,
+    original_url: resolveBackendUrl(data.original_url),
+    depth_png_url: resolveBackendUrl(data.depth_png_url),
+    geotiff_url: resolveBackendUrl(data.geotiff_url),
+    mesh_obj_url: resolveBackendUrl(data.mesh_obj_url),
+    sat3dgen_mesh_url: data.sat3dgen_mesh_url ? resolveBackendUrl(data.sat3dgen_mesh_url) : null,
+    precomputed_mesh_url: data.precomputed_mesh_url ? resolveBackendUrl(data.precomputed_mesh_url) : null,
+    colored_png_urls,
+  };
 }
 
 export async function pollJob(
