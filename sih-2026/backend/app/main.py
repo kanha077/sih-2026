@@ -234,6 +234,17 @@ def _process_pipeline(
 
 
 # API Endpoints
+@app.get("/")
+def root():
+    return {
+        "service": "DepthWizard DEM Engine API",
+        "version": "1.0.0",
+        "status": "online",
+        "documentation": "/docs",
+        "frontend": "http://localhost:3000",
+    }
+
+
 @app.get("/api/health")
 def health_check():
     return {

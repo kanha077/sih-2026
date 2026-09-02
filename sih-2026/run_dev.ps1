@@ -9,12 +9,19 @@ $backendDir = Join-Path $PSScriptRoot "backend"
 $frontendDir = Join-Path $PSScriptRoot "frontend"
 
 Write-Host "`n[1/2] Starting FastAPI Backend on http://127.0.0.1:8000..." -ForegroundColor Green
-$backendProcess = Start-Process python -ArgumentList "-m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload" -WorkingDirectory $backendDir -PassThru
+$backendProcess = Start-Process cmd.exe -ArgumentList "/k title DepthWizard Backend && cd /d `"$backendDir`" && python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload" -PassThru
 
 Start-Sleep -Seconds 2
 
+if (-not (Test-Path (Join-Path $frontendDir "node_modules"))) {
+    Write-Host "[0/2] Installing frontend dependencies (npm install)..." -ForegroundColor Yellow
+    Set-Location $frontendDir
+    npm install
+    Set-Location $PSScriptRoot
+}
+
 Write-Host "[2/2] Starting Vite Frontend on http://localhost:3000..." -ForegroundColor Green
-$frontendProcess = Start-Process npm -ArgumentList "run dev" -WorkingDirectory $frontendDir -PassThru
+$frontendProcess = Start-Process cmd.exe -ArgumentList "/k title DepthWizard Frontend && cd /d `"$frontendDir`" && npm run dev" -PassThru
 
 Write-Host "`n==================================================================" -ForegroundColor Cyan
 Write-Host "  DepthWizard is running live!" -ForegroundColor Green

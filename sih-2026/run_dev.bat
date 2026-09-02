@@ -9,6 +9,11 @@ start "DepthWizard Backend" cmd /k "cd /d %~dp0backend && python -m uvicorn app.
 
 timeout /t 2 /nobreak >nul
 
+if not exist "%~dp0frontend\node_modules" (
+    echo [0/2] Installing frontend dependencies (npm install)...
+    cd /d "%~dp0frontend" && call npm install
+)
+
 echo [2/2] Starting Vite Frontend on http://localhost:3000...
 start "DepthWizard Frontend" cmd /k "cd /d %~dp0frontend && npm run dev"
 
