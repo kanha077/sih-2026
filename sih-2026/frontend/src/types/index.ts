@@ -16,6 +16,7 @@ export interface ElevationStats {
   max_elevation: number;
   mean_elevation: number;
   std_elevation: number;
+  units?: string;
   crs: string;
   bounds: SpatialBounds;
   processing_time_ms: number;
@@ -28,8 +29,10 @@ export interface JobResult {
   depth_png_url: string;
   colored_png_urls: Record<string, string>;
   mesh_obj_url: string;
+  sat3dgen_mesh_url?: string | null;
   precomputed_mesh_url?: string | null;
   stats: ElevationStats;
+  calibration_info?: Record<string, any>;
   available_colormaps: string[];
 }
 

@@ -16,7 +16,7 @@ export const ProgressModal: React.FC<ProgressModalProps> = ({ status, isOpen }) 
 
   const stages = [
     { label: 'OPTICAL INGESTION & TENSOR CONVERSION', minProg: 15 },
-    { label: 'MIDAS MONOCULAR DISPARITY ESTIMATION', minProg: 35 },
+    { label: 'DEPTH ANYTHING V2 DISPARITY ESTIMATION', minProg: 35 },
     { label: 'RASTERIO 32-BIT GEOTIFF DEM SYNTHESIS', minProg: 65 },
     { label: 'HYPSOMETRIC RELIEF & COLORMAP SHADING', minProg: 80 },
     { label: '3D WAVEFRONT TERRAIN MESH GENERATION', minProg: 92 },

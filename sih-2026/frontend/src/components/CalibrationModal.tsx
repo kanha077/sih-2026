@@ -57,7 +57,7 @@ export const CalibrationModal: React.FC<CalibrationModalProps> = ({ isOpen, onCl
               </h3>
 
               <p className="text-sm font-sans text-topo-inkMuted leading-relaxed">
-                DepthWizard runs the MiDaS deep neural network to estimate relative surface depth directly from visual cues (perspective, texture gradients, and occlusion). The output is normalized to an illustrative 0 to 100 relative elevation scale.
+                DepthWizard runs the Depth Anything V2 deep neural network to estimate relative surface depth directly from visual cues (perspective, texture gradients, and occlusion). The output is normalized to an illustrative 0 to 100 relative elevation scale.
               </p>
             </div>
 
@@ -82,7 +82,7 @@ export const CalibrationModal: React.FC<CalibrationModalProps> = ({ isOpen, onCl
             <div>
               <div className="flex items-center justify-between gap-2 mb-3">
                 <span className="px-2 py-0.5 rounded-sm bg-topo-terra/15 text-topo-terra border border-topo-terra/30 text-xs font-mono font-bold">
-                  CALIBRATED MODE [FUTURE]
+                  CALIBRATED MODE [ACTIVE]
                 </span>
                 <Satellite className="w-4 h-4 text-topo-terra" />
               </div>
@@ -92,7 +92,7 @@ export const CalibrationModal: React.FC<CalibrationModalProps> = ({ isOpen, onCl
               </h3>
 
               <p className="text-sm font-sans text-topo-inkMuted leading-relaxed">
-                A calibrated model converts relative parallax into true metric heights. By pairing photo GPS EXIF metadata (camera pitch, yaw, altitude) with open reference DEMs (Copernicus 30m or NASA SRTM), the model scales into real-world meters.
+                GEOSCALE calibration converts relative depth into true metric heights MSL. By extracting EXIF GPS coordinates (or manual lat/lon anchors) and fetching reference DEM tiles (USGS/Copernicus), robust RANSAC linear regression fits the elevation map directly to real-world meters.
               </p>
             </div>
 

@@ -31,7 +31,7 @@ export const Hero: React.FC<HeroProps> = ({ onScrollToUpload, onSelectPreset }) 
           <div className="mt-6 flex flex-wrap gap-2 text-xs font-mono text-topo-inkMuted">
             <div className="px-2.5 py-1 rounded-sm bg-topo-panel border border-topo-border flex items-center gap-1.5">
               <Target className="w-3.5 h-3.5 text-topo-ochre" />
-              <span>MiDaS_small Monocular Disparity</span>
+              <span>Depth Anything V2 Monocular AI</span>
             </div>
 
             <div className="px-2.5 py-1 rounded-sm bg-topo-panel border border-topo-border flex items-center gap-1.5">

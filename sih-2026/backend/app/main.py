@@ -17,9 +17,11 @@ import numpy as np
 
 from app.services.depth_estimator import DepthEstimator
 from app.services.dem_generator import generate_geotiff
-from app.services.colormap_service import generate_colorized_images
+from app.services.colormap_service import generate_colorized_images, COLORMAP_PALETTES
 from app.services.mesh_generator import generate_obj_mesh
 from app.services.cleanup_service import purge_old_artifacts
+from app.services.geoscale import extract_exif_geolocation, calibrate_to_metric
+from app.services.sat3dgen import generate_point_cloud_mesh
 
 # Setup Logging
 logging.basicConfig(
@@ -164,13 +166,49 @@ def _process_pipeline(
         if pil_image.mode != "RGB":
             pil_image = pil_image.convert("RGB")
 
+        # Dynamic feature flags
+        depth_backend = os.getenv("DEPTH_MODEL_BACKEND", "depth_anything_v2")
+        enable_sat3dgen = os.getenv("ENABLE_SAT3DGEN", "true").lower() == "true"
+        enable_calibration = os.getenv("ENABLE_CALIBRATION", "true").lower() == "true"
+
+        # Extract EXIF GPS coordinates if present
+        exif_lat, exif_lon = extract_exif_geolocation(pil_image)
+        final_lat = exif_lat if exif_lat is not None else origin_lat
+        final_lon = exif_lon if exif_lon is not None else origin_lon
+
         # 1. Depth Estimation
         jobs_db[job_id]["progress"] = 35
-        jobs_db[job_id]["message"] = "Estimating monocular depth via MiDaS..."
+        jobs_db[job_id]["message"] = f"Estimating monocular depth via {depth_backend}..."
         estimator = DepthEstimator()
         elevation_data = estimator.estimate_depth(pil_image)
 
-        # 2. GeoTIFF Generation
+        # 2. GEOSCALE Metric Calibration (Optional with strict Preview fallback)
+        calibrated_elevation = None
+        calibration_info = {"mode": "preview", "units": "0-100 relative units"}
+        is_calibrated = False
+
+        if enable_calibration:
+            jobs_db[job_id]["progress"] = 55
+            jobs_db[job_id]["message"] = "Running GEOSCALE metric elevation calibration..."
+            try:
+                metric_arr, cal_metrics = calibrate_to_metric(elevation_data, final_lat, final_lon)
+                if metric_arr is not None and cal_metrics is not None:
+                    calibrated_elevation = metric_arr
+                    calibration_info = cal_metrics
+                    is_calibrated = True
+            except Exception as e:
+                logger.warning(f"GEOSCALE calibration error ({e}). Falling back strictly to Preview Mode.")
+
+        # Active elevation raster (calibrated meters or relative 0-100)
+        active_elevation = calibrated_elevation if is_calibrated and calibrated_elevation is not None else elevation_data
+
+        if is_calibrated:
+            logger.info(
+                f"Rasterizing GeoTIFF & DEM stats with calibrated metric elevation array: "
+                f"range [{float(np.min(active_elevation)):.2f}, {float(np.max(active_elevation)):.2f}] meters MSL"
+            )
+
+        # 3. GeoTIFF Generation (Using true EXIF or manual origin coordinates)
         jobs_db[job_id]["progress"] = 65
         jobs_db[job_id]["message"] = "Rasterizing 32-bit single-band GeoTIFF DEM..."
         job_output_dir = os.path.join(OUTPUTS_DIR, job_id)
@@ -178,23 +216,42 @@ def _process_pipeline(
 
         geotiff_path = os.path.join(job_output_dir, "elevation_dem.tif")
         dem_stats = generate_geotiff(
-            elevation_data,
+            active_elevation,
             geotiff_path,
-            origin_lat=origin_lat,
-            origin_lon=origin_lon,
+            origin_lat=final_lat,
+            origin_lon=final_lon,
             pixel_scale=pixel_scale,
+            is_calibrated=is_calibrated,
+            elevation_unit="meters" if is_calibrated else "relative",
         )
 
-        # 3. Colormaps & Relief PNGs
-        jobs_db[job_id]["progress"] = 80
-        jobs_db[job_id]["message"] = "Rendering hypsometric elevation palettes..."
-        colored_files = generate_colorized_images(elevation_data, job_output_dir)
+        # 4. Colormaps & Relief PNGs
+        jobs_db[job_id]["progress"] = 78
+        jobs_db[job_id]["message"] = "Rendering hypsometric elevation palettes (Depth Anything V2)..."
+        logger.info(
+            f"[JOB {job_id}] Synthesizing {len(COLORMAP_PALETTES)} hypsometric heatmaps from Depth Anything V2 elevation map "
+            f"(range: [{float(np.min(active_elevation)):.2f}, {float(np.max(active_elevation)):.2f}], calibrated={is_calibrated})"
+        )
+        colored_files = generate_colorized_images(active_elevation, job_output_dir)
+        logger.info(f"[JOB {job_id}] Generated hypsometric heatmaps: {list(colored_files.keys())}")
 
-        # 4. 3D Wavefront OBJ Mesh
-        jobs_db[job_id]["progress"] = 92
-        jobs_db[job_id]["message"] = "Generating 3D terrain surface mesh..."
+        # 5. Primary 3D Heightmap Mesh
+        jobs_db[job_id]["progress"] = 88
+        jobs_db[job_id]["message"] = "Generating primary 3D terrain surface mesh..."
         mesh_path = os.path.join(job_output_dir, "terrain_mesh.obj")
-        generate_obj_mesh(elevation_data, mesh_path)
+        generate_obj_mesh(active_elevation, mesh_path)
+
+        # 6. SAT3DGEN Point-Cloud Reconstruction Branch (Isolated failure handling)
+        sat3dgen_mesh_url = None
+        if enable_sat3dgen:
+            jobs_db[job_id]["progress"] = 94
+            jobs_db[job_id]["message"] = "Running SAT3DGEN point-cloud 3D reconstruction..."
+            try:
+                sat3dgen_path = os.path.join(job_output_dir, "sat3dgen_mesh.obj")
+                generate_point_cloud_mesh(active_elevation, pil_image, sat3dgen_path)
+                sat3dgen_mesh_url = f"/outputs/{job_id}/sat3dgen_mesh.obj"
+            except Exception as e:
+                logger.warning(f"SAT3DGEN mesh generation error: {e}. Omitting sat3dgen_mesh_url.")
 
         elapsed_ms = int((time.time() - t0) * 1000)
         dem_stats["processing_time_ms"] = elapsed_ms
@@ -217,12 +274,14 @@ def _process_pipeline(
                 "depth_png_url": f"/outputs/{job_id}/depth_raw.png",
                 "colored_png_urls": colored_urls,
                 "mesh_obj_url": f"/outputs/{job_id}/terrain_mesh.obj",
+                "sat3dgen_mesh_url": sat3dgen_mesh_url,
                 "precomputed_mesh_url": precomputed_mesh_url,
                 "stats": dem_stats,
+                "calibration_info": calibration_info,
                 "available_colormaps": list(colored_urls.keys()),
             },
         })
-        logger.info(f"Job {job_id} successfully completed in {elapsed_ms}ms")
+        logger.info(f"Job {job_id} successfully completed in {elapsed_ms}ms (Calibrated: {is_calibrated})")
     except Exception as e:
         logger.error(f"Job {job_id} failed: {e}", exc_info=True)
         jobs_db[job_id].update({

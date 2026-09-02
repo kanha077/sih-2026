@@ -23,7 +23,7 @@ export const StatsCard: React.FC<StatsCardProps> = ({ stats, onOpenCalibration }
           onClick={onOpenCalibration}
           className="flex items-center gap-1 text-[10px] text-topo-ochre hover:underline"
         >
-          <span>DATUM: PREVIEW</span>
+          <span>{stats.units === 'meters_msl' ? 'DATUM: CALIBRATED (METERS MSL)' : 'DATUM: PREVIEW [0–100]'}</span>
           <Info className="w-3 h-3" />
         </button>
       </div>
@@ -35,9 +35,15 @@ export const StatsCard: React.FC<StatsCardProps> = ({ stats, onOpenCalibration }
         <div className="p-2.5 rounded-sm bg-topo-canvas border border-topo-border">
           <div className="text-[10px] text-topo-inkDim uppercase">ELEVATION RANGE (Z)</div>
           <div className="mt-1 text-sm font-bold text-topo-ochre">
-            {stats.min_elevation} – {stats.max_elevation}
+            {stats.units === 'meters_msl'
+              ? `${stats.min_elevation} – ${stats.max_elevation} m MSL`
+              : `${stats.min_elevation} – ${stats.max_elevation}`}
           </div>
-          <div className="text-[9px] text-topo-inkMuted">0–100 Relative Units</div>
+          <div className="text-[9px] text-topo-inkMuted">
+            {stats.units === 'meters_msl'
+              ? `Elevation: ${stats.min_elevation}–${stats.max_elevation} m MSL`
+              : `Elevation: ${stats.min_elevation}–${stats.max_elevation} (relative units)`}
+          </div>
         </div>
 
         {/* Statistical Mean & Deviation */}
@@ -65,7 +71,7 @@ export const StatsCard: React.FC<StatsCardProps> = ({ stats, onOpenCalibration }
             <Clock className="w-3 h-3" />
             <span>{stats.processing_time_ms} ms</span>
           </div>
-          <div className="text-[9px] text-topo-inkMuted">MiDaS + Rasterio GeoTIFF</div>
+          <div className="text-[9px] text-topo-inkMuted">Depth Anything V2 + Rasterio</div>
         </div>
 
       </div>

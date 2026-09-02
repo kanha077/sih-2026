@@ -14,13 +14,23 @@ LOCAL_WEIGHTS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname
 LOCAL_WEIGHTS_PATH = os.path.join(LOCAL_WEIGHTS_DIR, "midas_v21_small-70d6b9c8.pt")
 
 
+from app.services.depth_estimator_v2 import DepthEstimatorV2
+
 class DepthEstimator:
     _instance = None
     _model = None
     _transform = None
     _device = None
+    _backend_type = None
 
     def __new__(cls):
+        backend_choice = os.getenv("DEPTH_MODEL_BACKEND", "depth_anything_v2").lower()
+        if backend_choice == "depth_anything_v2":
+            try:
+                return DepthEstimatorV2()
+            except Exception as e:
+                logger.warning(f"DepthEstimatorV2 init failed ({e}), falling back to MiDaS_small...")
+
         if cls._instance is None:
             cls._instance = super(DepthEstimator, cls).__new__(cls)
             cls._instance._init_model()

@@ -48,17 +48,21 @@ export const DownloadSuite: React.FC<DownloadSuiteProps> = ({ result, currentCol
           </span>
         </a>
 
-        {/* 3D Wavefront Mesh OBJ */}
+        {/* 3D Wavefront / SAT3DGEN Mesh OBJ */}
         <a
-          href={getDownloadUrl(result.job_id, 'mesh')}
+          href={result.sat3dgen_mesh_url || getDownloadUrl(result.job_id, 'mesh')}
           download
           className="flex items-center justify-between p-2.5 rounded-sm bg-topo-canvas border border-topo-border hover:border-topo-borderFocus text-topo-ink hover:text-topo-sand transition-colors"
         >
           <div className="flex items-center gap-2 truncate">
             <Box className="w-4 h-4 text-topo-sand shrink-0" />
             <div className="truncate">
-              <div className="font-bold text-xs truncate">3D Terrain Mesh</div>
-              <div className="text-[10px] text-topo-inkDim font-sans">Wavefront with UVs</div>
+              <div className="font-bold text-xs truncate">
+                {result.sat3dgen_mesh_url ? 'SAT3DGEN Surface Mesh' : '3D Terrain Mesh'}
+              </div>
+              <div className="text-[10px] text-topo-inkDim font-sans">
+                {result.sat3dgen_mesh_url ? 'Poisson Point Cloud Mesh' : 'Wavefront with UVs'}
+              </div>
             </div>
           </div>
           <span className="px-1.5 py-0.5 rounded-sm bg-topo-panel border border-topo-border text-topo-inkMuted text-[10px] font-bold">

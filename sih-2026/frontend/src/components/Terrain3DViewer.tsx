@@ -16,6 +16,8 @@ import {
   Sliders,
 } from 'lucide-react';
 
+import { ElevationStats } from '../types';
+
 interface Terrain3DViewerProps {
   originalUrl: string;
   depthUrl: string;
@@ -23,6 +25,7 @@ interface Terrain3DViewerProps {
   colormapLabel?: string;
   precomputedMeshUrl?: string | null;
   theme?: 'dark' | 'light';
+  stats?: ElevationStats;
 }
 
 export const Terrain3DViewer: React.FC<Terrain3DViewerProps> = ({
@@ -32,6 +35,7 @@ export const Terrain3DViewer: React.FC<Terrain3DViewerProps> = ({
   colormapLabel = 'Hypsometric Elevation',
   precomputedMeshUrl,
   theme,
+  stats,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
@@ -687,9 +691,13 @@ export const Terrain3DViewer: React.FC<Terrain3DViewerProps> = ({
 
         {/* Right: Hypsometric Elevation Legend Bar */}
         <div className="pointer-events-auto flex items-center gap-2 px-3 py-1.5 rounded-sm bg-topo-panel/95 border border-topo-border text-[10px] font-mono">
-          <span className="text-topo-inkDim">0 (Basin)</span>
+          <span className="text-topo-inkDim">
+            {stats?.units === 'meters_msl' ? `${stats.min_elevation}m MSL` : '0 (Basin)'}
+          </span>
           <div className="w-20 sm:w-28 h-2 rounded-none bg-gradient-to-r from-[#194d23] via-[#dce775] via-[#6d4c41] to-[#ffffff] border border-topo-border" />
-          <span className="text-topo-ink">100 (Peak)</span>
+          <span className="text-topo-ink">
+            {stats?.units === 'meters_msl' ? `${stats.max_elevation}m MSL` : '100 (Peak)'}
+          </span>
         </div>
 
       </div>

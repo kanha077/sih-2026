@@ -18,6 +18,11 @@ def generate_colorized_images(elevation_data: np.ndarray, output_dir: str) -> di
     os.makedirs(output_dir, exist_ok=True)
     height, width = elevation_data.shape
 
+    logger.info(
+        f"[DEPTH ANYTHING V2 HEATMAP] Rendering {len(COLORMAP_PALETTES)} hypsometric elevation colormaps "
+        f"({', '.join(COLORMAP_PALETTES)}) from {width}x{height} depth matrix into {output_dir}"
+    )
+
     # Normalize elevation to [0.0, 1.0] for colormapping
     elev_norm = np.clip(elevation_data / 100.0, 0.0, 1.0)
     generated_files = {}

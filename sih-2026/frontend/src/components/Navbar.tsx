@@ -10,6 +10,7 @@ interface NavbarProps {
   hasResult: boolean;
   theme: 'dark' | 'light';
   onToggleTheme: () => void;
+  calibrationMode?: 'preview' | 'calibrated' | string;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -21,6 +22,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   hasResult,
   theme,
   onToggleTheme,
+  calibrationMode = 'preview',
 }) => {
   return (
     <header className="sticky top-0 z-40 w-full border-b border-topo-border bg-topo-panel/95 backdrop-blur-md">
@@ -48,8 +50,12 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         {/* Center: Datum Indicator */}
         <div className="hidden md:flex items-center gap-2 px-2.5 py-1 rounded-sm bg-topo-canvas border border-topo-border text-xs font-mono text-topo-inkMuted">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-          <span>DATUM: WGS84-PREVIEW [0–100 RELATIVE UNITS]</span>
+          <span className={`w-1.5 h-1.5 rounded-full ${calibrationMode === 'calibrated' ? 'bg-amber-400' : 'bg-emerald-400'} animate-pulse`} />
+          <span>
+            {calibrationMode === 'calibrated'
+              ? 'DATUM: WGS84-CALIBRATED'
+              : 'DATUM: WGS84-PREVIEW'}
+          </span>
         </div>
 
         {/* Right: Actions */}

@@ -187,6 +187,7 @@ export const App: React.FC = () => {
         hasResult={!!currentResult}
         theme={theme}
         onToggleTheme={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+        calibrationMode={currentResult?.calibration_info?.mode || 'preview'}
       />
 
       {/* Main Content */}

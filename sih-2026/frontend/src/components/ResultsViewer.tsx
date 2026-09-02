@@ -140,6 +140,7 @@ export const ResultsViewer: React.FC<ResultsViewerProps> = ({
                 colormapLabel={colormapNames[currentColormap]}
                 precomputedMeshUrl={result.precomputed_mesh_url}
                 theme={theme}
+                stats={result.stats}
               />
             )}
 

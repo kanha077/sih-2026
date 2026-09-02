@@ -19,7 +19,7 @@ export const HowItWorks: React.FC<HowItWorksProps> = ({ isOpen, onClose }) => {
     {
       num: '02',
       icon: <Cpu className="w-4 h-4 text-topo-sand" />,
-      title: 'MiDaS Monocular Disparity Estimation',
+      title: 'Depth Anything V2 Monocular Disparity Estimation',
       description: 'A deep neural network estimates dense relative depth maps in ~300ms, mapping optical cues (texture gradients, occlusion, perspective) to surface distance.'
     },
     {

@@ -14,10 +14,12 @@ def generate_geotiff(
     origin_lat: float = 37.7749,
     origin_lon: float = -122.4194,
     pixel_scale: float = 0.0001,
+    is_calibrated: bool = False,
+    elevation_unit: str = "relative",
 ) -> dict:
     """
     Generate a 32-bit single-band float GeoTIFF DEM file.
-    elevation_data: 2D numpy array (height, width) with float32 relative elevation [0, 100].
+    elevation_data: 2D numpy array (height, width) with float32 elevation.
     """
     height, width = elevation_data.shape
     elevation_f32 = elevation_data.astype(np.float32)
@@ -27,6 +29,9 @@ def generate_geotiff(
     crs = CRS.from_epsg(4326)
 
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
+
+    elevation_type_tag = "Calibrated Metric Elevation (meters MSL)" if is_calibrated else "Monocular Relative Disparity Surface"
+    datum_tag = "WGS84 Calibrated (meters)" if is_calibrated else "WGS84 Preview (0-100 Relative Units)"
 
     with rasterio.open(
         output_path,
@@ -44,8 +49,8 @@ def generate_geotiff(
         # Write cartographic metadata tags
         dst.update_tags(
             CREATOR="DepthWizard Topographical DEM Engine",
-            ELEVATION_TYPE="Monocular Relative Disparity Surface",
-            DATUM="WGS84 Preview (0-100 Relative Units)",
+            ELEVATION_TYPE=elevation_type_tag,
+            DATUM=datum_tag,
             VERSION="1.0.0",
         )
 
@@ -63,6 +68,7 @@ def generate_geotiff(
         "max_elevation": round(max_val, 2),
         "mean_elevation": round(mean_val, 2),
         "std_elevation": round(std_val, 2),
+        "units": "meters_msl" if is_calibrated else "relative_0_100",
         "crs": "EPSG:4326",
         "bounds": {
             "min_lon": round(origin_lon, 6),
